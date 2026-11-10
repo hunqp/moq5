@@ -1855,6 +1855,10 @@ static moq_result_t create_facade(const moq_pq_threaded_cfg_t *cfg,
 
     /* ---- CLIENT: create connection + session + adapter ---- */
 
+    /* The client opens sockets only for the peer's address family: the packet
+     * loop otherwise opens IPv4 and IPv6 and fails to start on a host whose
+     * kernel has no IPv6, even when the peer is IPv4. */
+    int client_af = 0;
     if (persp == MOQ_PERSPECTIVE_CLIENT) {
         struct addrinfo hints, *res = NULL;
         memset(&hints, 0, sizeof(hints));
@@ -1875,6 +1879,7 @@ static moq_result_t create_facade(const moq_pq_threaded_cfg_t *cfg,
             t->quic, res->ai_addr, now, 0,
             sni, t->alpn_count > 0 ? NULL : MOQ_PQ_ALPN_DEFAULT,
             client_callback, t);
+        client_af = res->ai_family;
         freeaddrinfo(res);
         if (!cnx) goto fail_configure;
 
@@ -1936,6 +1941,8 @@ static moq_result_t create_facade(const moq_pq_threaded_cfg_t *cfg,
     memset(&t->loop_param, 0, sizeof(t->loop_param));
     if (persp == MOQ_PERSPECTIVE_SERVER)
         t->loop_param.local_port = (uint16_t)port;
+    else
+        t->loop_param.local_af = client_af;
     if (t->bind_address.ss_family != 0)
         t->loop_param.local_addr[0] = t->bind_address;
     t->loop_param.socket_buffer_size = (int)t->socket_buffer_bytes;

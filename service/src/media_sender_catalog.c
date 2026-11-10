@@ -270,6 +270,17 @@ static moq_result_t sender_build_catalog_at(moq_media_sender_t *s,
         moq_media_track_t *t = s->tracks[i];
         if (!track_in_catalog(t, only_registered)) continue;
         track_fill_msf(t, &mt[k]);
+#ifdef MOQ_CATALOG_INLINE_INIT_DATA
+        /* Receivers that read only the track's own initData (MOQtail, MSF-00). */
+        if (sender_init_by_reference(t)) {
+            rc = moq_msf_encode_init_data(&s->alloc, t->init_data, &b64[nb]);
+            if (rc < 0) break;
+            mt[k].has_init_data = true;
+            mt[k].init_data = (moq_bytes_t){
+                moq_rcbuf_data(b64[nb]), moq_rcbuf_len(b64[nb]) };
+            nb++;
+        }
+#else
         if (sender_init_by_reference(t)) {
             /* Identical init bytes share the stable ID assigned at add_track,
              * so emit one root entry per ID, whichever track still uses it. */
@@ -297,6 +308,7 @@ static moq_result_t sender_build_catalog_at(moq_media_sender_t *s,
             mt[k].has_init_ref = true;
             mt[k].init_ref = idl[e].id;
         }
+#endif
         k++;
     }
 

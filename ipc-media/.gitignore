@@ -1,0 +1,12 @@
+build/
+
+# Installed by 3rd-parties/libmoq5/build.sh
+3rd-parties/libmoq5/include/
+3rd-parties/libmoq5/lib/
+3rd-parties/libmoq5/share/
+
+# OpenSSL shared libs come from the board SDK (the rootfs ships them); only needed to link
+3rd-parties/libopenssl-1.1.1h/lib/
+
+# libfaac has no build script here, so its prebuilt archive is kept (the root ignores *.a)
+!3rd-parties/libfaac/lib/libfaac.a

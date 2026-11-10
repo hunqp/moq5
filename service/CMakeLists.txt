@@ -36,6 +36,13 @@ target_include_directories(moq-service
 target_link_libraries(moq-service PUBLIC moq::core moq::msf)
 target_compile_features(moq-service PUBLIC c_std_11)
 
+# Carry each track's init data inline (initData) instead of the root
+# initDataList + initRef, for players that read only the inline form.
+option(MOQ_CATALOG_INLINE_INIT_DATA "Sender catalog carries per-track inline initData" OFF)
+if(MOQ_CATALOG_INLINE_INIT_DATA)
+    target_compile_definitions(moq-service PRIVATE MOQ_CATALOG_INLINE_INIT_DATA=1)
+endif()
+
 # Managed transport facades: linked when built, otherwise the connect path
 # returns MOQ_ERR_UNSUPPORTED (severability -- never an accidental link
 # failure). The endpoint adds the service-tier contracts on top of them.
